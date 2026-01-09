@@ -1,9 +1,10 @@
 package com.ecommerce.backend.model
 
-import ch.qos.logback.core.status.Status
 import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.mapping.Document
 import java.time.LocalDateTime
 
+@Document(collection = "orders")
 data class Order(
     @Id
     val id: String? = null,

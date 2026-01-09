@@ -27,6 +27,6 @@ class OrderController (
 
     @GetMapping
     fun getMyOrders(): List<Order>{
-        return orderService.getOrders(currentUserEmail())
+        return orderService.getOrdersForUser(currentUserEmail())
     }
 }

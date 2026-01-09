@@ -1,30 +1,30 @@
 package com.ecommerce.backend.security
 
+import io.jsonwebtoken.Claims
+import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.security.Keys
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
-import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
+import java.util.Base64
+import javax.crypto.SecretKey
 
-@Component
 class JwtAuthenticationFilter(
-    private val jwtService: JwtService
+    jwtSecret: String
 ) : OncePerRequestFilter() {
+
+    private val key: SecretKey =
+        Keys.hmacShaKeyFor(Base64.getDecoder().decode(jwtSecret))
 
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-
-        if (request.requestURI.startsWith("/auth")) {
-            filterChain.doFilter(request, response)
-            return
-        }
 
         val authHeader = request.getHeader("Authorization")
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -33,23 +33,28 @@ class JwtAuthenticationFilter(
         }
 
         val token = authHeader.substring(7)
-        val email = jwtService.extractEmail(token)
-        val role = jwtService.extractRole(token)
 
-        val authorities = listOf(
-            SimpleGrantedAuthority("ROLE_$role")
-        )
+        try {
+            val claims: Claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .body
 
-        val authentication = UsernamePasswordAuthenticationToken(
-            email,
-            null,
-            authorities
-        )
+            val email = claims.subject
+            val role = claims["role"] as String
 
-        authentication.details =
-            WebAuthenticationDetailsSource().buildDetails(request)
+            val authentication = UsernamePasswordAuthenticationToken(
+                email,
+                null,
+                listOf(SimpleGrantedAuthority(role))
+            )
 
-        SecurityContextHolder.getContext().authentication = authentication
+            SecurityContextHolder.getContext().authentication = authentication
+
+        } catch (ex: Exception) {
+            SecurityContextHolder.clearContext()
+        }
 
         filterChain.doFilter(request, response)
     }
