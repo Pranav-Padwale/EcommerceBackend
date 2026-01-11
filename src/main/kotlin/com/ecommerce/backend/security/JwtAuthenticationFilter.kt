@@ -27,6 +27,8 @@ class JwtAuthenticationFilter(
     ) {
 
         val authHeader = request.getHeader("Authorization")
+
+        // ✅ If token not present, continue (important for login/register)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response)
             return
@@ -44,10 +46,14 @@ class JwtAuthenticationFilter(
             val email = claims.subject
             val role = claims["role"] as String
 
+            // ✅ Double safety
+            val authority =
+                if (role.startsWith("ROLE_")) role else "ROLE_$role"
+
             val authentication = UsernamePasswordAuthenticationToken(
                 email,
                 null,
-                listOf(SimpleGrantedAuthority(role))
+                listOf(SimpleGrantedAuthority(authority))
             )
 
             SecurityContextHolder.getContext().authentication = authentication
