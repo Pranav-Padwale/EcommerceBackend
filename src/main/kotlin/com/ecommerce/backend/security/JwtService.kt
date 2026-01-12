@@ -19,16 +19,11 @@ class JwtService(
         Keys.hmacShaKeyFor(Base64.getDecoder().decode(jwtSecret))
 
     fun generateToken(email: String, role: String): String {
-
-        // ✅ Normalize role to Spring Security standard
-        val normalizedRole =
-            if (role.startsWith("ROLE_")) role else "ROLE_$role"
-
         return Jwts.builder()
             .setSubject(email)
-            .claim("role", normalizedRole)
+            .claim("role", role) // "ADMIN" / "USER"
             .setIssuedAt(Date())
-            .setExpiration(Date(System.currentTimeMillis() + 86400000)) // 24h
+            .setExpiration(Date(System.currentTimeMillis() + 86400000))
             .signWith(key, SignatureAlgorithm.HS256)
             .compact()
     }

@@ -24,7 +24,6 @@ class AuthController(
         )
     }
 
-
     @PostMapping("/login")
     fun login(@Valid @RequestBody request: LoginRequest): AuthResponse {
 
@@ -35,7 +34,7 @@ class AuthController(
 
         val token = jwtService.generateToken(
             user.email,
-            user.role.name
+            user.role
         )
 
         return AuthResponse(token)

@@ -10,10 +10,5 @@ data class User(
     val name: String,
     val email: String,
     val password: String,
-    val role: Role = Role.USER
+    val role: String
 )
-
-enum class Role {
-    USER,
-    ADMIN
-}

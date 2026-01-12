@@ -4,7 +4,9 @@ import com.ecommerce.backend.security.JwtAuthenticationFilter
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
@@ -16,9 +18,19 @@ class SecurityConfig(
 ) {
 
     @Bean
-    fun jwtAuthenticationFilter(): JwtAuthenticationFilter {
-        return JwtAuthenticationFilter(jwtSecret)
-    }
+    fun jwtAuthenticationFilter(): JwtAuthenticationFilter =
+        JwtAuthenticationFilter(jwtSecret)
+
+    @Bean
+    fun webSecurityCustomizer(): WebSecurityCustomizer =
+        WebSecurityCustomizer { web ->
+            web.ignoring().requestMatchers(
+                "/v3/api-docs",
+                "/v3/api-docs/**",
+                "/swagger-ui/**",
+                "/swagger-ui.html"
+            )
+        }
 
     @Bean
     fun securityFilterChain(
@@ -27,21 +39,22 @@ class SecurityConfig(
     ): SecurityFilterChain {
 
         http
+            .cors { }
             .csrf { it.disable() }
             .sessionManagement {
                 it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }
             .authorizeHttpRequests {
 
-                // Public APIs
                 it.requestMatchers("/api/auth/**").permitAll()
 
-                //  Admin APIs
-                it.requestMatchers("/products/**").hasRole("ADMIN")
-                it.requestMatchers("/admin/**").hasRole("ADMIN")
+                it.requestMatchers(HttpMethod.GET, "/products/**").permitAll()
+                it.requestMatchers(HttpMethod.POST, "/products/**").hasRole("ADMIN")
+                it.requestMatchers(HttpMethod.PUT, "/products/**").hasRole("ADMIN")
+                it.requestMatchers(HttpMethod.DELETE, "/products/**").hasRole("ADMIN")
 
-                //  User APIs
-                it.requestMatchers("/cart/**", "/orders/**").permitAll()
+                it.requestMatchers("/admin/**").hasRole("ADMIN")
+                it.requestMatchers("/cart/**", "/orders/**").authenticated()
 
                 it.anyRequest().authenticated()
             }
