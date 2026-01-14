@@ -25,7 +25,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
-    // MongoDB (if you use it)
+    // MongoDB
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 
     // JWT
@@ -42,6 +42,12 @@ dependencies {
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
+
+    //  REQUIRED FOR CQRS READ MODEL
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+    // DB (choose one)
+    runtimeOnly("com.h2database:h2")
 }
 
 
